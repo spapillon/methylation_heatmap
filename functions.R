@@ -16,7 +16,7 @@ prune_dataset = function(meth_gr, feature_gr, upstream = 1000, downstream = 1000
   meth_gr_list = split(meth_gr, seqnames(meth_gr))
   feature_gr_list = split(feature_gr, seqnames(feature_gr))
   meth_gr_list = meth_gr_list[intersect(names(meth_gr_list), names(feature_gr_list))]
-  feature_gr_list = feature_gr_list[intersect(names(meth_gr_list), names(feature_gr_list))]
+  #feature_gr_list = feature_gr_list[intersect(names(meth_gr_list), names(feature_gr_list))]
   return(list(meth_gr_list = meth_gr_list, feature_gr_list = feature_gr_list))
 }
 
