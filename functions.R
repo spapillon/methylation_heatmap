@@ -24,8 +24,7 @@ prune_dataset = function(meth_gr, feature_gr, upstream = 1000, downstream = 1000
 # splits GRanges objects in chromosomes and launches
 # main method on chromosomes individually
 process_data = function(meth_gr_list, feature_gr_list, upstream = 1000, downstream = 1000,
-                feature_perc = 0.01, bin_size = 100 ) {
-
+                feature_perc = 0.01, bin_size = 100, mc.cores = 4 ) {
 
   # Fetch methylation values and adjust the feature column
   # to fit whatever there is in the feature mcol of feature_gr
@@ -36,7 +35,7 @@ process_data = function(meth_gr_list, feature_gr_list, upstream = 1000, downstre
     chr_data_frame = Reduce(rbind.data.frame, data_list)
     chr_data_frame$feature = feature_gr_list[[chr]][chr_data_frame$feature]$feature
     chr_data_frame
-  }, mc.cores = 1)
+  }, mc.cores = mc.cores)
   # Crunch everything back together
   Reduce(rbind.data.frame, list_of_data_per_chr)
 }

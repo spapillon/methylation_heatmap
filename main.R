@@ -40,14 +40,17 @@ gr_list = prune_dataset(meth_gr,ensemble_gr,upstream=10000,downstream=10000)
 # Remove the large objects that aren't used anymore
 rm(meth_gr,ensemble_gr,genome.coord)
 
+
+gr_list$feature_gr_list = lapply(gr_list$feature_gr_list, function(i) {
+  i$feature = paste(i$gname, i$tid, sep=":")
+  i })
 # Run the thing.
 tmp_gr_list = gr_list
-tmp_gr_list[[1]] = gr_list[[1]][c('chr19','chr20')]
-tmp_gr_list[[2]] = gr_list[[2]][c('chr19','chr20')]
+tmp_gr_list[[1]] = gr_list[[1]][c('chr21','chr22')]
+tmp_gr_list[[2]] = gr_list[[2]][c('chr21','chr22')]
 
 
-feature_methylation = process_data(tmp_gr_list$meth_gr_list, tmp_gr_list$feature_gr_list, upstream = 10000, downstream = 10000,
-                feature_perc = 0.01, bin_size = 100)
+feature_methylation = process_data(tmp_gr_list$meth_gr_list, tmp_gr_list$feature_gr_list, upstream = 10000, downstream = 10000, feature_perc = 0.01, bin_size = 100, mc.cores=4)
 
 width(tmp) = 1
   data_list = test(chr1_meth,head(ensemble_gr,n=100))
