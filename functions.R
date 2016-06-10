@@ -30,6 +30,7 @@ process_data = function(meth_gr_list, feature_gr_list, upstream = 1000, downstre
   # to fit whatever there is in the feature mcol of feature_gr
   # (useful for post-processing)
   list_of_data_per_chr <- mclapply(sample(names(feature_gr_list)), function(chr) {
+    message(paste("Processing",chr))
     data_list = process(meth_gr_list[[chr]], feature_gr_list[[chr]], upstream, downstream,
       feature_perc, bin_size)
     chr_data_frame = Reduce(rbind.data.frame, data_list)
