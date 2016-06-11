@@ -25,13 +25,12 @@ prune_dataset = function(meth_gr, feature_gr, upstream = 1000, downstream = 1000
 # main method on chromosomes individually
 process_data = function(meth_gr_list, feature_gr_list, upstream = 1000, downstream = 1000,
                 feature_perc = 0.01, bin_size = 100, mc.cores = 4 ) {
-
   # Fetch methylation values and adjust the feature column
   # to fit whatever there is in the feature mcol of feature_gr
   # (useful for post-processing)
   list_of_data_per_chr <- mclapply(sample(names(feature_gr_list)), function(chr) {
     message(paste("Processing",chr))
-    data_list = process(meth_gr_list[[chr]], feature_gr_list[[chr]], upstream, downstream,
+    data_list = methylation_per_feature(meth_gr_list[[chr]], feature_gr_list[[chr]], upstream, downstream,
       feature_perc, bin_size)
     chr_data_frame = Reduce(rbind.data.frame, data_list)
     chr_data_frame$feature = feature_gr_list[[chr]][chr_data_frame$feature]$feature
@@ -49,15 +48,6 @@ methylation_per_feature = function(meth_gr, feature_gr, upstream = 1000, downstr
   upstream_gr = flank(feature_gr, width=upstream, start=T, ignore.strand=F)
   downstream_gr = flank(feature_gr, width=downstream, start=F, ignore.strand=F)
 
-  # TSS plots are generated simply by setting width(feature_gr) = 1.
-  # Thus, we can skip the within-feature fetching of methylation.
-  if(any(width(feature_gr) != 1)) {
-  feature_overlaps = findOverlaps(feature_gr, meth_gr)
-  feature_meth = meth_by_percent(meth_gr, feature_gr, feature_overlaps)
-  feature_meth_scaled = bin_methylation(feature_meth, 1, feature_perc)
-  } else {
-    feature_meth_scaled = NA
-  }
   upstream_overlaps = findOverlaps(upstream_gr, meth_gr)
   upstream_meth = meth_by_distance(meth_gr, feature_gr, upstream_overlaps)
   upstream_meth_scaled = bin_methylation(upstream_meth, upstream, bin_size) 
@@ -68,7 +58,16 @@ methylation_per_feature = function(meth_gr, feature_gr, upstream = 1000, downstr
   downstream_meth = meth_by_distance(meth_gr, feature_gr, downstream_overlaps) 
   downstream_meth_scaled = bin_methylation(downstream_meth, upstream, bin_size) 
 
-  list(upstream = upstream_meth_scaled, feature = feature_meth_scaled, downstream = downstream_meth_scaled)
+  # TSS plots are generated simply by setting width(feature_gr) = 1.
+  # Thus, we can skip the within-feature fetching of methylation.
+  if(any(width(feature_gr) != 1)) {
+    feature_overlaps = findOverlaps(feature_gr, meth_gr)
+    feature_meth = meth_by_percent(meth_gr, feature_gr, feature_overlaps)
+    feature_meth_scaled = bin_methylation(feature_meth, 1, feature_perc)
+    return(list(upstream = upstream_meth_scaled, feature = feature_meth_scaled, downstream = downstream_meth_scaled))
+  } else {
+    return(list(upstream = upstream_meth_scaled, downstream = downstream_meth_scaled))
+  }
 }
 
 # Averages methylation levels in bins
@@ -115,7 +114,7 @@ meth_by_percent = function(meth_gr, feature_gr, overlaps) {
 
 plotit = function(df) {
 
-  p = ggplot(data=df,aes(x=ordered(bin),y=ordered(feature), fill=meth))
+  p = ggplot(data=df,aes(x=ordered(bin),y=ordered(feature, levels=gene_names[o]), fill=meth))
   p = p + geom_tile()
   p = p + theme(axis.text.x = element_text(angle = 90, hjust = 1))
   p = p + scale_fill_gradientn(colours=c("blue","white","red"), na.value = "lightgray")
