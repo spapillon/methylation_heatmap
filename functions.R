@@ -118,7 +118,18 @@ plotit = function(df) {
   p = p + geom_tile()
   p = p + theme(axis.text.x = element_text(angle = 90, hjust = 1))
   p = p + scale_fill_gradientn(colours=c("blue","white","red"), na.value = "lightgray")
+  p = p + theme(axis.line=element_blank(),
+      #axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      #axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.position="top",
+      panel.background=element_blank(),
+      panel.border=element_blank(),
+      panel.grid.major=element_blank(),
+      panel.grid.minor=element_blank(),
+      plot.background=element_blank())
   p
-
 }
 

@@ -50,7 +50,7 @@ tmp_gr_list[[1]] = gr_list[[1]][c('chr21','chr22')]
 tmp_gr_list[[2]] = gr_list[[2]][c('chr21','chr22')]
 
 
-feature_methylation = process_data(tmp_gr_list$meth_gr_list, tmp_gr_list$feature_gr_list, upstream = 10000, downstream = 10000, feature_perc = 0.01, bin_size = 100, mc.cores=4)
+system.time(feature_methylation <- process_data(gr_list$meth_gr_list, gr_list$feature_gr_list, upstream = 10000, downstream = 10000, feature_perc = 0.01, bin_size = 100, mc.cores=6))
 
 width(tmp) = 1
   data_list = test(chr1_meth,head(ensemble_gr,n=100))
