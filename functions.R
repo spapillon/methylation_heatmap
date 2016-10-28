@@ -32,14 +32,14 @@ process_data = function(meth_gr_list, feature_gr_list, upstream = 1000, downstre
   feature_chrs = names(feature_gr_list)[sapply(feature_gr_list,length) > 0]
   meth_chrs = names(meth_gr_list)[sapply(meth_gr_list,length) > 0]
   chrs = intersect(feature_chrs, meth_chrs)
-  list_of_data_per_chr <- lapply(sample(chrs), function(chr) {
+  list_of_data_per_chr <- mclapply(sample(chrs), function(chr) {
     message(paste("Processing",chr))
     data_list = methylation_per_feature(meth_gr_list[[chr]], feature_gr_list[[chr]], upstream, downstream,
       feature_perc, bin_size)
     chr_data_frame = Reduce(rbind.data.frame, data_list)
     chr_data_frame$name = feature_gr_list[[chr]][chr_data_frame$feature]$name
     chr_data_frame
-  }) #, mc.cores = mc.cores)
+  }, mc.cores = mc.cores)
   # Crunch everything back together
   Reduce(rbind.data.frame, list_of_data_per_chr)
 }
@@ -114,9 +114,9 @@ meth_by_percent = function(meth_gr, feature_gr, overlaps) {
    })
 }
 
-plotit = function(df, ordering) {
-
-  p = ggplot(data=df,aes(x=ordered(bin),y=ordered(feature, levels=ordering), fill=meth))
+plotit = function(df, ordering = NULL) {
+  if(is.null(ordering)) ordering = unique(df$feature)
+  p = ggplot(data=df,aes(x=ordered(bin),y=ordered(name, levels=ordering), fill=meth))
   p = p + geom_tile()
   p = p + theme(axis.text.x = element_text(angle = 90, hjust = 1))
   p = p + scale_fill_gradientn(colours=c("blue","white","red"), na.value = "lightgray")
