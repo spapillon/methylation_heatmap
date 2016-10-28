@@ -1,6 +1,6 @@
 library(parallel)
 library(rtracklayer)
-library(ggplots2)
+library(ggplot2)
 
 #
 # meth_gr : methylation GRanges object

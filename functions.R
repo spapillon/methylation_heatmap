@@ -37,7 +37,7 @@ process_data = function(meth_gr_list, feature_gr_list, upstream = 1000, downstre
     data_list = methylation_per_feature(meth_gr_list[[chr]], feature_gr_list[[chr]], upstream, downstream,
       feature_perc, bin_size)
     chr_data_frame = Reduce(rbind.data.frame, data_list)
-    chr_data_frame$feature = feature_gr_list[[chr]][chr_data_frame$feature]$feature
+    chr_data_frame$name = feature_gr_list[[chr]][chr_data_frame$name]$name
     chr_data_frame
   }, mc.cores = mc.cores)
   # Crunch everything back together
