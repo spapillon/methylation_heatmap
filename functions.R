@@ -1,8 +1,5 @@
-
-###############################
-#
-###############################
-
+library(parallel)
+library(ggplot2)
 
 # Run this first to save a lot of time and memory
 prune_dataset = function(meth_gr, feature_gr, upstream = 1000, downstream = 1000) {
@@ -115,7 +112,7 @@ meth_by_percent = function(meth_gr, feature_gr, overlaps) {
 }
 
 plotit = function(df, ordering = NULL) {
-  if(is.null(ordering)) ordering = unique(df$feature)
+  if(is.null(ordering)) ordering = unique(df$name)
   p = ggplot(data=df,aes(x=ordered(bin),y=ordered(name, levels=ordering), fill=meth))
   p = p + geom_tile()
   p = p + theme(axis.text.x = element_text(angle = 90, hjust = 1))

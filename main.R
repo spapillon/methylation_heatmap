@@ -11,8 +11,6 @@
 # Our WGBS is fucked up and the start and end are inverted in the bedGraph file
 # Load methylation data
 library(rtracklayer)
-library(parallel)
-library(ggplot2)
 source("functions.R")
 
 meth_gr = import("/Volumes/vdu-032-aa/papillon/K36M/wgbs/methylation/bedgraph/C1_MPC_BS.bedgraph")
