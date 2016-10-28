@@ -32,14 +32,14 @@ process_data = function(meth_gr_list, feature_gr_list, upstream = 1000, downstre
   feature_chrs = names(feature_gr_list)[sapply(feature_gr_list,length) > 0]
   meth_chrs = names(meth_gr_list)[sapply(meth_gr_list,length) > 0]
   chrs = intersect(feature_chrs, meth_chrs)
-  list_of_data_per_chr <- mclapply(sample(chrs), function(chr) {
+  list_of_data_per_chr <- lapply(sample(chrs), function(chr) {
     message(paste("Processing",chr))
     data_list = methylation_per_feature(meth_gr_list[[chr]], feature_gr_list[[chr]], upstream, downstream,
       feature_perc, bin_size)
     chr_data_frame = Reduce(rbind.data.frame, data_list)
-    chr_data_frame$name = feature_gr_list[[chr]][chr_data_frame$name]$name
+    chr_data_frame$name = feature_gr_list[[chr]][chr_data_frame$feature]$name
     chr_data_frame
-  }, mc.cores = mc.cores)
+  }) #, mc.cores = mc.cores)
   # Crunch everything back together
   Reduce(rbind.data.frame, list_of_data_per_chr)
 }
@@ -51,7 +51,6 @@ methylation_per_feature = function(meth_gr, feature_gr, upstream = 1000, downstr
 		feature_perc = 0.01, bin_size = 100) {
   upstream_gr = flank(feature_gr, width=upstream, start=T, ignore.strand=F)
   downstream_gr = flank(feature_gr, width=downstream, start=F, ignore.strand=F)
-
   upstream_overlaps = findOverlaps(upstream_gr, meth_gr)
   upstream_meth = meth_by_distance(meth_gr, feature_gr, upstream_overlaps)
   upstream_meth_scaled = bin_methylation(upstream_meth, upstream, bin_size) 
@@ -87,10 +86,10 @@ bin_methylation = function(feature_list, max, by) {
 # and compute the distance.
 # This function represents majority of compute time.
 meth_by_distance = function(meth_gr, feature_gr, overlaps) {
-  sapply(1:length(feature_gr), function(i) {
+  lapply(1:length(feature_gr), function(i) {
     meth_i = subjectHits(overlaps[queryHits(overlaps) == i])
     distance =  distance(meth_gr[meth_i], feature_gr[i])
-    cbind(distance=distance, value=meth_gr[meth_i]$value)
+    cbind("distance"=distance, "value"=meth_gr[meth_i]$score)
   })
 }
 
@@ -101,11 +100,10 @@ meth_by_distance = function(meth_gr, feature_gr, overlaps) {
 # Since reverse-strand features start and actually the end(feature_gr)
 # those entries should be 1 - x.
 meth_by_percent = function(meth_gr, feature_gr, overlaps) {
-
   tmp_feature_gr = feature_gr
   width(tmp_feature_gr) = 1
   feature_meth = meth_by_distance(meth_gr, tmp_feature_gr, overlaps) 
-  sapply(1:length(feature_gr), function(i) {
+  lapply(1:length(feature_gr), function(i) {
     percentage = feature_meth[[i]][,'distance'] / width(feature_gr[i])
     # 1 - x for reverse strand
     if(as.character(strand(feature_gr[i])) == "-") {
