@@ -1,8 +1,3 @@
-library(parallel)
-library(rtracklayer)
-library(ggplot2)
-
-#
 # meth_gr : methylation GRanges object
 # it needs to have a numeric mcol nammed "value"
 # that represents the methylation level at that position
@@ -15,45 +10,19 @@ library(ggplot2)
 
 # Our WGBS is fucked up and the start and end are inverted in the bedGraph file
 # Load methylation data
-meth_gr = import("/Volumes/abacus/spapillo/K27M_peaks/wgbs/human/BT245-C19/BT245-C19_cells_BS_1.profile.bedGraph")
-meth_gr$value = as.numeric(meth_gr$score)
-start(meth_gr) = end(meth_gr)
-end(meth_gr) = start(meth_gr) + 1
+library(rtracklayer)
+library(parallel)
+library(ggplot2)
+source("functions.R")
 
-# Below I'm manipulating the NGSPLOT database to use it directly
-# for re-ordering later. But you can use any properly formatted GRanges object
-# Load annotation
-load("~/bin/ngsplot/database/hg19/hg19.ensembl.genebody.protein_coding.RData")
-load("~/Desktop/BT245.RData")
-
-# This is formatting specific to my stuff
-genome.coord = genome.coord[paste(genome.coord$gname, genome.coord$tid, sep=":") %in% gene_names, ]
-ensemble_gr = GRanges(seqnames=genome.coord$chr, strand=genome.coord$strand,
-        ranges = IRanges(start = genome.coord$start, end = genome.coord$end))
-ensemble_gr$gname = genome.coord$gname
-ensemble_gr$tid = genome.coord$tid
-ensemble_gr$feature = paste(ensemble_gr$gname, ensemble_gr$tid, sep=":")
-
-# Remove unecessary things..
-gr_list = prune_dataset(meth_gr,ensemble_gr,upstream=10000,downstream=10000)
-
-# Remove the large objects that aren't used anymore
-rm(meth_gr,ensemble_gr,genome.coord)
+meth_gr = import("/Volumes/vdu-032-aa/papillon/K36M/wgbs/methylation/bedgraph/C1_MPC_BS.bedgraph")
+reference_gr = import("~/Documents/reference/mm10/mm10_refseq.bed")
 
 
-gr_list$feature_gr_list = lapply(gr_list$feature_gr_list, function(i) {
-  i$feature = paste(i$gname, i$tid, sep=":")
-  i })
-# Run the thing.
-tmp_gr_list = gr_list
-tmp_gr_list[[1]] = gr_list[[1]][c('chr21','chr22')]
-tmp_gr_list[[2]] = gr_list[[2]][c('chr21','chr22')]
-
+# Format a lightweight object that is useful for faster processing
+# (gets rid of meth_gr entries that are not within reference_gr) 
+gr_list = prune_dataset(meth_gr,sample(reference_gr,1000),upstream=10000,downstream=10000)
 
 system.time(feature_methylation <- process_data(gr_list$meth_gr_list, gr_list$feature_gr_list, upstream = 10000, downstream = 10000, feature_perc = 0.01, bin_size = 100, mc.cores=6))
-
-width(tmp) = 1
-  data_list = test(chr1_meth,head(ensemble_gr,n=100))
-  df = Reduce(rbind.data.frame, data_list[-2])
 
 
