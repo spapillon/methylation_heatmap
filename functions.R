@@ -7,6 +7,7 @@
 # Run this first to save a lot of time and memory
 prune_dataset = function(meth_gr, feature_gr, upstream = 1000, downstream = 1000) {
   # Drop datapoints outside of regions of interest
+  seqlevels(meth_gr, force=T) = seqlevels(feature_gr, force=T) = intersect(seqlevels(meth_gr), seqlevels(feature_gr))
   upstream_gr = flank(feature_gr, width=upstream, start=T, ignore.strand=F)
   downstream_gr = flank(feature_gr, width=downstream, start=F, ignore.strand=F)
   overlaps = findOverlaps(meth_gr, reduce(reduce(c(upstream_gr, feature_gr, downstream_gr))))
@@ -15,7 +16,7 @@ prune_dataset = function(meth_gr, feature_gr, upstream = 1000, downstream = 1000
   # and parallelization
   meth_gr_list = split(meth_gr, seqnames(meth_gr))
   feature_gr_list = split(feature_gr, seqnames(feature_gr))
-  meth_gr_list = meth_gr_list[intersect(names(meth_gr_list), names(feature_gr_list))]
+  #meth_gr_list = meth_gr_list[intersect(names(meth_gr_list), names(feature_gr_list))]
   #feature_gr_list = feature_gr_list[intersect(names(meth_gr_list), names(feature_gr_list))]
   return(list(meth_gr_list = meth_gr_list, feature_gr_list = feature_gr_list))
 }
@@ -28,7 +29,10 @@ process_data = function(meth_gr_list, feature_gr_list, upstream = 1000, downstre
   # Fetch methylation values and adjust the feature column
   # to fit whatever there is in the feature mcol of feature_gr
   # (useful for post-processing)
-  list_of_data_per_chr <- mclapply(sample(names(feature_gr_list)), function(chr) {
+  feature_chrs = names(feature_gr_list)[sapply(feature_gr_list,length) > 0]
+  meth_chrs = names(meth_gr_list)[sapply(meth_gr_list,length) > 0]
+  chrs = intersect(feature_chrs, meth_chrs)
+  list_of_data_per_chr <- mclapply(sample(chrs), function(chr) {
     message(paste("Processing",chr))
     data_list = methylation_per_feature(meth_gr_list[[chr]], feature_gr_list[[chr]], upstream, downstream,
       feature_perc, bin_size)
@@ -112,9 +116,9 @@ meth_by_percent = function(meth_gr, feature_gr, overlaps) {
    })
 }
 
-plotit = function(df) {
+plotit = function(df, ordering) {
 
-  p = ggplot(data=df,aes(x=ordered(bin),y=ordered(feature, levels=gene_names[o]), fill=meth))
+  p = ggplot(data=df,aes(x=ordered(bin),y=ordered(feature, levels=ordering), fill=meth))
   p = p + geom_tile()
   p = p + theme(axis.text.x = element_text(angle = 90, hjust = 1))
   p = p + scale_fill_gradientn(colours=c("blue","white","red"), na.value = "lightgray")
